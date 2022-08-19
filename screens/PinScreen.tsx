@@ -7,20 +7,32 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import pins from "../assets/data/pins";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 const PinScreen = () => {
   const [ratio, setRatio] = useState(1);
   const insets = useSafeAreaInsets();
 
-  const pin = pins[0];
+  const navigation = useNavigation();
+  const route = useRoute();
+
+  const pinId = route.params?.id;
+
+  const pin = pins.find((p) => p.id === pinId);
 
   useEffect(() => {
-    if (pin.image) {
+    if (pin?.image) {
       Image.getSize(pin.image, (width, height) => setRatio(width / height));
     }
-  }, [pin.image]);
+  }, [pin?.image]);
 
-  const goBack = () => {};
+  const goBack = () => {
+    navigation.goBack();
+  };
+
+  if (!pin) {
+    return <Text>Pin not found...</Text>;
+  }
 
   return (
     <SafeAreaView style={{ backgroundColor: "black" }}>
