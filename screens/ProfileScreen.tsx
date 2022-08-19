@@ -1,15 +1,24 @@
 import { Entypo, Feather } from "@expo/vector-icons";
-import { Image, ScrollView, StyleSheet } from "react-native";
+import { useNhostClient } from "@nhost/react";
+import { Image, Pressable, ScrollView, StyleSheet } from "react-native";
 import pins from "../assets/data/pins";
 import MasonryList from "../components/MasonryList";
 import { Text, View } from "../components/Themed";
 
 export default function ProfileScreen() {
+  const nhost = useNhostClient();
+
+  const signOut = () => {
+    nhost.auth.signOut();
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.icons}>
-          <Feather name="share" size={24} color="white" style={styles.icon} />
+          <Pressable onPress={signOut}>
+            <Feather name="share" size={24} color="white" style={styles.icon} />
+          </Pressable>
           <Entypo
             name="dots-three-horizontal"
             size={24}
