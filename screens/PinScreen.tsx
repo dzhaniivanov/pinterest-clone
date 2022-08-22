@@ -8,6 +8,7 @@ import {
 } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useNhostClient } from "@nhost/react";
+import RemoteImage from "../components/RemoteImage";
 
 const GET_PIN_QUERY = `
 query MyQuery ($id:uuid!) {
@@ -26,9 +27,7 @@ query MyQuery ($id:uuid!) {
 `;
 
 const PinScreen = () => {
-  const [ratio, setRatio] = useState(1);
   const [pin, setPin] = useState<any>(null);
-  const [imageUri, setImageUri] = useState("");
   const insets = useSafeAreaInsets();
 
   const nhost = useNhostClient();
@@ -47,28 +46,9 @@ const PinScreen = () => {
     }
   };
 
-  const fetchImage = async () => {
-    const result = await nhost.storage.getPresignedUrl({
-      fileId: pin.image,
-    });
-    if (result.presignedUrl?.url) {
-      setImageUri(result.presignedUrl?.url);
-    }
-  };
-
   useEffect(() => {
     fetchPin(pinId);
   }, [pinId]);
-
-  useEffect(() => {
-    fetchImage();
-  }, [pin]);
-
-  useEffect(() => {
-    if (imageUri) {
-      Image.getSize(imageUri, (width, height) => setRatio(width / height));
-    }
-  }, [imageUri]);
 
   const goBack = () => {
     navigation.goBack();
@@ -82,10 +62,7 @@ const PinScreen = () => {
     <SafeAreaView style={{ backgroundColor: "black" }}>
       <StatusBar style="light" />
       <View style={styles.root}>
-        <Image
-          source={{ uri: imageUri }}
-          style={[styles.image, { aspectRatio: ratio }]}
-        />
+        <RemoteImage fileId={pin.image} />
         <Text style={styles.title}>{pin.title}</Text>
       </View>
       <Pressable
