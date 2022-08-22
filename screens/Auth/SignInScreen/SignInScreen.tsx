@@ -27,10 +27,10 @@ const SignInScreen = () => {
       email,
       password,
     });
-    if(result.error){
-      Alert.alert('Error',result.error.message)
+    if (result.error) {
+      Alert.alert("Error", result.error.message);
     }
-    console.log(result)
+    // console.log(result)
   };
 
   const onForgotPasswordPressed = () => {

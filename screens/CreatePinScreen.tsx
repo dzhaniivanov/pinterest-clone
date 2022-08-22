@@ -41,7 +41,7 @@ export default function CreatePinScreen() {
       quality: 0.5,
     });
 
-    console.log(result);
+    // console.log(result);
 
     if (!result.cancelled) {
       setImageUri(result.uri);
