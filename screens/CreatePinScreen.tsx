@@ -12,7 +12,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useNhostClient } from "@nhost/react";
 import { useNavigation } from "@react-navigation/native";
 
-const CREEATE_PIN_MUTATION = `
+const CREATE_PIN_MUTATION = `
 mutation MyMutation($image:String!,$title:String) {
   insert_pins(objects: {image: $image, title: $title}) {
     returning {
@@ -27,7 +27,7 @@ mutation MyMutation($image:String!,$title:String) {
 `;
 
 export default function CreatePinScreen() {
-  const [image, setImage] = useState(null);
+  const [imageUri, setImageUri] = useState<null | string>(null);
   const [title, setTitle] = useState("");
 
   const nhost = useNhostClient();
@@ -44,17 +44,48 @@ export default function CreatePinScreen() {
     console.log(result);
 
     if (!result.cancelled) {
-      setImage(result.uri);
+      setImageUri(result.uri);
     }
   };
 
-  const onSubmit = async () => {
+  const uploadFile = async () => {
+    if (!imageUri) {
+      return {
+        error: {
+          message: "No image selected",
+        },
+      };
+    }
 
+    const parts = imageUri.split("/");
+    const name = parts[parts.length - 1];
+    const nameParts = name.split(".");
+    const extension = nameParts[nameParts.length - 1];
+
+    const uri =
+      Platform.OS === "ios" ? imageUri.replace("file://", "") : imageUri;
+
+    const result = await nhost.storage.upload({
+      file: {
+        name,
+        type: `image/${extension}`,
+        uri,
+      },
+    });
+    return result;
+  };
+
+  const onSubmit = async () => {
     //todo upload a image to cloud
-    const result = await nhost.graphql.request(CREEATE_PIN_MUTATION, {
+    const uploadResult = await uploadFile();
+
+    if (uploadResult.error) {
+      Alert.alert("Erorr uploading the image", uploadResult.error.message);
+      return;
+    }
+    const result = await nhost.graphql.request(CREATE_PIN_MUTATION, {
       title,
-      image:
-        "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/pinterest/8.jpeg",
+      image: uploadResult.fileMetadata.id,
     });
     if (result.error) {
       Alert.alert("Error creating the post", result.error.message);
@@ -66,9 +97,9 @@ export default function CreatePinScreen() {
   return (
     <View style={styles.root}>
       <Button title="Upload your pin" onPress={pickImage} />
-      {image && (
+      {imageUri && (
         <>
-          <Image source={{ uri: image }} style={styles.image} />
+          <Image source={{ uri: imageUri }} style={styles.image} />
           <TextInput
             placeholder="Title..."
             style={styles.input}
