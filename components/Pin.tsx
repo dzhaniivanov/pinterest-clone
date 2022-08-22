@@ -2,21 +2,37 @@ import React, { useEffect, useState } from "react";
 import { View, Text, Image, StyleSheet, Pressable } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useNhostClient } from "@nhost/react";
 
 const Pin = ({ pin }) => {
   const [ratio, setRatio] = useState(1);
   const navigation = useNavigation();
+  const [imageUri, setImageUri] = useState("");
+  const nhost = useNhostClient();
+
+  const fetchImage = async () => {
+    const result = await nhost.storage.getPresignedUrl({
+      fileId: pin.image,
+    });
+    if (result.presignedUrl?.url) {
+      setImageUri(result.presignedUrl?.url);
+    }
+  };
 
   useEffect(() => {
-    if (pin.image) {
-      Image.getSize(pin.image, (width, height) => setRatio(width / height));
-    }
+    fetchImage();
   }, [pin.image]);
+
+  useEffect(() => {
+    if (imageUri) {
+      Image.getSize(imageUri, (width, height) => setRatio(width / height));
+    }
+  }, [imageUri]);
 
   const onLike = () => {};
 
   const goToPinPage = () => {
-    navigation.navigate("Pin",{id:pin.id});
+    navigation.navigate("Pin", { id: pin.id });
   };
 
   return (
@@ -24,7 +40,7 @@ const Pin = ({ pin }) => {
       <View>
         <Image
           source={{
-            uri: pin.image,
+            uri: imageUri,
           }}
           style={[styles.image, { aspectRatio: ratio }]}
         />
